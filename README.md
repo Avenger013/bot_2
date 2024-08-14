@@ -1,1 +1,1 @@
-# bot_2
+# telegram-nirvana-bot
