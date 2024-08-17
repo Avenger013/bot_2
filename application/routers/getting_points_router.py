@@ -49,7 +49,7 @@ async def getting_points(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Systems.System)
 
 
-locale.setlocale(locale.LC_TIME, 'ru_RU')
+locale.setlocale(locale.LC_TIME, 'ru_RU.utf8')
 
 
 async def set_state_and_respond(callback, state, new_state, text, markup=None):
