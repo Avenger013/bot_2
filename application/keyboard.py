@@ -573,6 +573,15 @@ specialisation_keyboard = InlineKeyboardMarkup(inline_keyboard=[
     ]
 ])
 
+reincarnation = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='🔙 Назад',
+            callback_data='reincarnation'
+        )
+    ]
+])
+
 
 async def choice_teacher(tg_id: int):
     teachers_choice_kb = InlineKeyboardBuilder()

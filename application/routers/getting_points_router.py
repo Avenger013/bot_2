@@ -8,7 +8,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback
-from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, InlineKeyboardBuilder
 from sqlalchemy import select
 
 from application.states import Systems, CalendarState
@@ -67,8 +67,30 @@ month_name_nominative = {
 }
 
 
+def generate_month_keyboard():
+    months_kb = InlineKeyboardBuilder()
+
+    for month_num in range(1, 13):
+        months_kb.add(InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}'))
+
+    months_kb.add(InlineKeyboardButton(text="🔙 Назад", callback_data='reincarnation'))
+
+    return months_kb.adjust(3).as_markup()
+
+
+@router.callback_query(F.data.startswith('reincarnation'))
+async def getting_points_2(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await getting_points(callback, state)
+
+
 async def set_state_and_respond(callback, state, new_state, text, markup=None):
     await callback.message.edit_text(text=text, reply_markup=markup)
+    await state.set_state(new_state)
+
+
+async def set_state_and_respond_2(callback, state, new_state, text):
+    await callback.message.edit_text(text=text, reply_markup=kb.reincarnation)
     await state.set_state(new_state)
 
 
@@ -83,16 +105,7 @@ async def process_choose_task(callback: CallbackQuery, state: FSMContext):
         await set_state_and_respond(callback, state, new_state, text, calendar_markup)
 
     elif task_id in {2, 3}:
-        months_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
-             month_num in range(1, 4)],
-            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
-             month_num in range(4, 7)],
-            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
-             month_num in range(7, 10)],
-            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
-             month_num in range(10, 13)],
-        ])
+        months_kb = generate_month_keyboard()
         text = "Пожалуйста выберите месяц:"
         new_state = CalendarState.Waiting_for_month if task_id == 2 else CalendarState.Waiting_for_performance
         await set_state_and_respond(callback, state, new_state, text, months_kb)
@@ -100,11 +113,11 @@ async def process_choose_task(callback: CallbackQuery, state: FSMContext):
     elif task_id in {4, 5}:
         text = "📎 Пожалуйста, отправьте ссылку для проверки."
         new_state = CalendarState.Waiting_for_link if task_id == 4 else CalendarState.Waiting_for_link_review
-        await set_state_and_respond(callback, state, new_state, text)
+        await set_state_and_respond_2(callback, state, new_state, text)
 
     elif task_id == 7:
         text = "Отправьте номер телефона, приглашенного ученика (без +7 или 8 в начале, только 10 цифр):"
-        await set_state_and_respond(callback, state, CalendarState.Waiting_for_phone, text)
+        await set_state_and_respond_2(callback, state, CalendarState.Waiting_for_phone, text)
 
 
 @router.callback_query(SimpleCalendarCallback.filter(), CalendarState.Waiting_for_date)
