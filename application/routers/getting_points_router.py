@@ -51,6 +51,21 @@ async def getting_points(callback: CallbackQuery, state: FSMContext):
 
 locale.setlocale(locale.LC_TIME, 'ru_RU.utf8')
 
+month_name_nominative = {
+    1: "Январь",
+    2: "Февраль",
+    3: "Март",
+    4: "Апрель",
+    5: "Май",
+    6: "Июнь",
+    7: "Июль",
+    8: "Август",
+    9: "Сентябрь",
+    10: "Октябрь",
+    11: "Ноябрь",
+    12: "Декабрь"
+}
+
 
 async def set_state_and_respond(callback, state, new_state, text, markup=None):
     await callback.message.edit_text(text=text, reply_markup=markup)
@@ -62,21 +77,21 @@ async def process_choose_task(callback: CallbackQuery, state: FSMContext):
     task_id = int(callback.data.split('_')[2])
 
     if task_id in {1, 6}:
-        calendar_markup = await SimpleCalendar(locale='ru_RU').start_calendar()
+        calendar_markup = await SimpleCalendar(locale='ru_RU.utf8').start_calendar()
         text = "Пожалуйста выберите дату:"
         new_state = CalendarState.Waiting_for_date if task_id == 1 else CalendarState.Waiting_for_date_event
         await set_state_and_respond(callback, state, new_state, text, calendar_markup)
 
     elif task_id in {2, 3}:
         months_kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text=month_name[month_num], callback_data=f'month_{month_num}') for month_num in
-             range(1, 4)],
-            [InlineKeyboardButton(text=month_name[month_num], callback_data=f'month_{month_num}') for month_num in
-             range(4, 7)],
-            [InlineKeyboardButton(text=month_name[month_num], callback_data=f'month_{month_num}') for month_num in
-             range(7, 10)],
-            [InlineKeyboardButton(text=month_name[month_num], callback_data=f'month_{month_num}') for month_num in
-             range(10, 13)],
+            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
+             month_num in range(1, 4)],
+            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
+             month_num in range(4, 7)],
+            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
+             month_num in range(7, 10)],
+            [InlineKeyboardButton(text=month_name_nominative[month_num], callback_data=f'month_{month_num}') for
+             month_num in range(10, 13)],
         ])
         text = "Пожалуйста выберите месяц:"
         new_state = CalendarState.Waiting_for_month if task_id == 2 else CalendarState.Waiting_for_performance
@@ -100,7 +115,7 @@ async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, 
         await state.clear()
         await getting_points(callback, state)
         return
-    selected, date = await SimpleCalendar(locale='ru_RU').process_selection(callback, callback_data)
+    selected, date = await SimpleCalendar(locale='ru_RU.utf8').process_selection(callback, callback_data)
     if selected:
         current_date = datetime.now().date()
         if date.date() > current_date:
@@ -161,7 +176,7 @@ async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, 
 async def process_choose_month(callback: CallbackQuery, state: FSMContext):
     month_num = int(callback.data.split('_')[1])
     current_year = datetime.now().year
-    month_name_str = month_name[month_num]
+    month_name_str = month_name_nominative[month_num]
 
     tg_id = callback.from_user.id
     async with async_session() as session:
@@ -195,7 +210,7 @@ async def process_choose_month(callback: CallbackQuery, state: FSMContext):
 async def process_choose_month(callback: CallbackQuery, state: FSMContext):
     month_num = int(callback.data.split('_')[1])
     current_year = datetime.now().year
-    month_name_str = month_name[month_num]
+    month_name_str = month_name_nominative[month_num]
 
     tg_id = callback.from_user.id
     async with async_session() as session:

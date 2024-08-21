@@ -215,13 +215,44 @@ async def update_feedback_sent(session, homework_id):
         await session.rollback()
 
 
-async def get_top_students(limit: int = 10):
+async def get_top_students_2(limit: int = 10):
     async with async_session() as session:
         result = await session.execute(
             select(Student)
             .order_by(Student.point.desc())
             .limit(limit)
         )
+        top_students = result.scalars().all()
+        return top_students
+
+
+async def get_top_students(limit: int = 10):
+    async with async_session() as session:
+        subquery_sum = (
+            select(
+                PointsHistory.student_id,
+                func.sum(PointsHistory.points_added).label('total_points')
+            )
+            .group_by(PointsHistory.student_id)
+            .subquery()
+        )
+
+        subquery_max = (
+            select(
+                subquery_sum.c.student_id,
+                func.max(subquery_sum.c.total_points).label('max_points')
+            )
+            .group_by(subquery_sum.c.student_id)
+            .subquery()
+        )
+
+        result = await session.execute(
+            select(Student)
+            .join(subquery_max, Student.id == subquery_max.c.student_id)
+            .order_by(subquery_max.c.max_points.desc())
+            .limit(limit)
+        )
+
         top_students = result.scalars().all()
         return top_students
 

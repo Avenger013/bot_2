@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from application.states import Gifts
 from application.database.models import StudentGift, async_session
 from application.database.requests import get_student_info, get_top_students, get_leader_of_the_month, get_money, \
-    get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info
+    get_gifts, get_student, get_gift_by_id, update_student_points, get_support, get_info, get_top_students_2
 
 import application.keyboard as kb
 
@@ -126,6 +126,9 @@ async def top_students(message: Message):
             return
 
     top_students_list = await get_top_students(10)
+    if not top_students_list:
+        top_students_list = await get_top_students_2(10)
+
     if top_students_list:
         response_message = "🏆 ТОП учеников по баллам:\n\n"
         for i, student in enumerate(top_students_list, start=1):
@@ -140,6 +143,8 @@ async def top_students(message: Message):
 @router.callback_query(F.data.startswith('viewing'))
 async def call_top_students(callback: CallbackQuery):
     top_students_list = await get_top_students(10)
+    if not top_students_list:
+        top_students_list = await get_top_students_2(10)
     if top_students_list:
         response_message = "🏆 ТОП учеников по баллам:\n\n"
         for i, student in enumerate(top_students_list, start=1):
