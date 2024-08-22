@@ -200,7 +200,7 @@ def make_approve_task(points):
 
 
 class Task1Admin(admin.ModelAdmin):
-    list_display = ('id', 'student_id', 'name', 'last_name', 'phone', 'date', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'date', 'is_approved')
     actions = [make_approve_task(3)]
 
     def save_model(self, request, obj, form, change):
@@ -229,7 +229,7 @@ admin.site.register(Task1, Task1Admin)
 
 
 class Task2Admin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'name', 'last_name', 'phone', 'month', 'year', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'month', 'year', 'is_approved')
     actions = [make_approve_task(2)]
 
     def save_model(self, request, obj, form, change):
@@ -258,7 +258,7 @@ admin.site.register(Task2, Task2Admin)
 
 
 class Task3Admin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'name', 'last_name', 'phone', 'month', 'year', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'month', 'year', 'is_approved')
     actions = [make_approve_task(1)]
 
     def save_model(self, request, obj, form, change):
@@ -287,7 +287,7 @@ admin.site.register(Task3, Task3Admin)
 
 
 class Task4Admin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'name', 'last_name', 'phone', 'date', 'link', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'date', 'link', 'is_approved')
     actions = [make_approve_task(1)]
 
     def save_model(self, request, obj, form, change):
@@ -316,7 +316,7 @@ admin.site.register(Task4, Task4Admin)
 
 
 class Task5Admin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'name', 'last_name', 'phone', 'date', 'link', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'date', 'link', 'is_approved')
     actions = [make_approve_task(1)]
 
     def save_model(self, request, obj, form, change):
@@ -345,7 +345,7 @@ admin.site.register(Task5, Task5Admin)
 
 
 class Task6Admin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'name', 'last_name', 'phone', 'date', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'date', 'is_approved')
     actions = [make_approve_task(1)]
 
     def save_model(self, request, obj, form, change):
@@ -374,7 +374,7 @@ admin.site.register(Task6, Task6Admin)
 
 
 class Task7Admin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'name', 'last_name', 'phone', 'phone_friend', 'is_approved')
+    list_display = ('id', 'student', 'phone', 'phone_friend', 'is_approved')
     actions = [make_approve_task(5)]
 
     def save_model(self, request, obj, form, change):

@@ -1,14 +1,14 @@
 import locale
 import re
+import calendar
 
 from datetime import datetime
-from calendar import month_name
+
 
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
-from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback
-from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup, InlineKeyboardBuilder
+from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardBuilder, InlineKeyboardMarkup
 from sqlalchemy import select
 
 from application.states import Systems, CalendarState
@@ -18,6 +18,41 @@ from application.database.requests import get_student_info, get_money_points
 import application.keyboard as kb
 
 router = Router(name=__name__)
+
+
+def generate_month_calendar():
+    now = datetime.now()
+    year, month = now.year, now.month
+    today = now.day
+
+    _, num_days = calendar.monthrange(year, month)
+
+    rows = []
+
+    for day in range(1, num_days + 1):
+        text = f"[{day}]" if day == today else str(day)
+        button = InlineKeyboardButton(text=text, callback_data=f'day_{day}')
+        if len(rows) == 0 or len(rows[-1]) >= 7:
+            rows.append([button])
+        else:
+            rows[-1].append(button)
+
+    back_button = InlineKeyboardButton(text='🔙 Назад', callback_data='reincarnation')
+    if len(rows) == 0 or len(rows[-1]) >= 7:
+        rows.append([back_button])
+    else:
+        rows[-1].append(back_button)
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
+
+    return keyboard
+
+
+def get_month_year_text():
+    now = datetime.now()
+    month = month_name_nominative[now.month]
+    year = now.year
+    return f"{month} {year}"
 
 
 def get_points_word(points):
@@ -99,14 +134,15 @@ async def process_choose_task(callback: CallbackQuery, state: FSMContext):
     task_id = int(callback.data.split('_')[2])
 
     if task_id in {1, 6}:
-        calendar_markup = await SimpleCalendar(locale='ru_RU.utf8').start_calendar()
-        text = "Пожалуйста выберите дату:"
+        calendar_markup = generate_month_calendar()
+        month_year_text = get_month_year_text()
+        text = f"Пожалуйста, выберите день ({month_year_text}):"
         new_state = CalendarState.Waiting_for_date if task_id == 1 else CalendarState.Waiting_for_date_event
         await set_state_and_respond(callback, state, new_state, text, calendar_markup)
 
     elif task_id in {2, 3}:
         months_kb = generate_month_keyboard()
-        text = "Пожалуйста выберите месяц:"
+        text = "Пожалуйста, выберите месяц:"
         new_state = CalendarState.Waiting_for_month if task_id == 2 else CalendarState.Waiting_for_performance
         await set_state_and_respond(callback, state, new_state, text, months_kb)
 
@@ -120,69 +156,81 @@ async def process_choose_task(callback: CallbackQuery, state: FSMContext):
         await set_state_and_respond_2(callback, state, CalendarState.Waiting_for_phone, text)
 
 
-@router.callback_query(SimpleCalendarCallback.filter(), CalendarState.Waiting_for_date)
-@router.callback_query(SimpleCalendarCallback.filter(), CalendarState.Waiting_for_date_event)
-async def process_simple_calendar(callback: CallbackQuery, callback_data: dict, state: FSMContext):
-    action = callback_data.act
-    if action == 'CANCEL':
-        await state.clear()
-        await getting_points(callback, state)
+@router.callback_query(CalendarState.Waiting_for_date)
+@router.callback_query(CalendarState.Waiting_for_date_event)
+async def process_simple_calendar(callback: CallbackQuery, state: FSMContext):
+    selected_day = callback.data.split('_')[1]
+
+    current_date = datetime.now().date()
+
+    try:
+        selected_date = datetime(year=current_date.year, month=current_date.month, day=int(selected_day)).date()
+    except ValueError:
+        await callback.answer(text="Выберите корректный день.", show_alert=True)
         return
-    selected, date = await SimpleCalendar(locale='ru_RU.utf8').process_selection(callback, callback_data)
-    if selected:
-        current_date = datetime.now().date()
-        if date.date() > current_date:
-            await callback.answer(text="Вы не можете выбрать дату позже сегодняшней.", show_alert=True)
-            await state.clear()
-            await getting_points(callback, state)
-            return
 
-        tg_id = callback.from_user.id
-        async with async_session() as session:
-            student, _, _ = await get_student_info(session, tg_id)
+    if selected_date > current_date:
+        await callback.answer(text="Вы не можете выбрать дату позже сегодняшней.", show_alert=True)
+        return
 
-            if student:
-                student_last_name = student.last_name
-                student_first_name = student.name
-                student_phone = student.phone
-                student_id = student.id
-                if await state.get_state() == CalendarState.Waiting_for_date_event:
-                    date_str = date.strftime("%d.%m.%Y")
+    tg_id = callback.from_user.id
 
-                    new_task = Task6(
-                        student_id=student_id,
-                        name=student_first_name,
-                        last_name=student_last_name,
-                        phone=student_phone,
-                        date=date_str,
-                        is_approved=0
-                    )
-                    session.add(new_task)
-                    await session.commit()
-                    await callback.message.edit_text(text='Данные отправлены администратору для проверки.',
-                                                     reply_markup=kb.back3)
-                else:
-                    date_str = date.strftime("%d.%m.%Y")
+    async with async_session() as session:
+        student, _, _ = await get_student_info(session, tg_id)
 
-                    new_task = Task1(
-                        student_id=student_id,
-                        name=student_first_name,
-                        last_name=student_last_name,
-                        phone=student_phone,
-                        date=date_str,
-                        is_approved=0
-                    )
-                    session.add(new_task)
-                    await session.commit()
-                    await callback.message.edit_text(text='Данные отправлены администратору для проверки.',
-                                                     reply_markup=kb.back3)
-                await state.clear()
+        if student:
+            student_last_name = student.last_name
+            student_first_name = student.name
+            student_phone = student.phone
+            student_id = student.id
+
+            date_str = selected_date.strftime("%d.%m.%Y")
+
+            query = select(Task6).filter_by(student_id=student_id, date=selected_date.strftime("%d.%m.%Y"))
+            result = await session.execute(query)
+            existing_task = result.scalars().first()
+
+            if existing_task:
+                await callback.answer(text="Вы уже выбрали эту дату. Пожалуйста, выберите другую.", show_alert=True)
+                return
+
+            if await state.get_state() == CalendarState.Waiting_for_date_event:
+                new_task = Task6(
+                    student_id=student_id,
+                    name=student_first_name,
+                    last_name=student_last_name,
+                    phone=student_phone,
+                    date=date_str,
+                    is_approved=0
+                )
             else:
-                await callback.message.edit_text('Не удалось найти информацию о пользователе.')
-                await state.clear()
-    else:
-        if callback.message.reply_markup:
-            await callback.answer()
+                query = select(Task1).filter_by(student_id=student_id, date=selected_date.strftime("%d.%m.%Y"))
+                result = await session.execute(query)
+                existing_task = result.scalars().first()
+
+                if existing_task:
+                    await callback.answer(text="Вы уже выбрали эту дату. Пожалуйста, выберите другую.", show_alert=True)
+                    return
+
+                new_task = Task1(
+                    student_id=student_id,
+                    name=student_first_name,
+                    last_name=student_last_name,
+                    phone=student_phone,
+                    date=date_str,
+                    is_approved=0
+                )
+
+            session.add(new_task)
+            await session.commit()
+            await callback.message.edit_text(
+                text='Данные отправлены администратору для проверки.',
+                reply_markup=kb.back3
+            )
+            await state.clear()
+        else:
+            await callback.message.edit_text('Не удалось найти информацию о пользователе.')
+            await state.clear()
 
 
 @router.callback_query(F.data.startswith('month_'), CalendarState.Waiting_for_month)
