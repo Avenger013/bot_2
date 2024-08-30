@@ -5,7 +5,7 @@ from typing import Optional
 
 from application.database.models import Teacher, Student, Administrator, Password, PointsHistory, StudentTeacher, \
     MonetizationSystem, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, DailyCheckIn, Homework, \
-    TasksForTheWeekVocal, MonetizationSystemPoints, async_session
+    TasksForTheWeekVocal, MonetizationSystemPoints, DailyCheckInVocal, async_session
 
 
 async def get_teachers():
@@ -120,7 +120,16 @@ async def get_student_info(session, tg_id):
             last_check_in = last_check_in_record.scalars().first()
             check_in_count = last_check_in.check_in_count if last_check_in else 0
 
-            return student, teachers, check_in_count
+            last_check_in_record_vocal = await session.execute(
+                select(DailyCheckInVocal)
+                .where(DailyCheckInVocal.student_id == student.id)
+                .order_by(DailyCheckInVocal.date.desc())
+                .limit(1)
+            )
+            last_check_in_vocal = last_check_in_record_vocal.scalars().first()
+            check_in_count_vocal = last_check_in_vocal.check_in_count if last_check_in_vocal else 0
+
+            return student, teachers, check_in_count, check_in_count_vocal
         else:
             return None, [], 0
     except Exception as e:

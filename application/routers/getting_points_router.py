@@ -176,7 +176,7 @@ async def process_simple_calendar(callback: CallbackQuery, state: FSMContext):
     tg_id = callback.from_user.id
 
     async with async_session() as session:
-        student, _, _ = await get_student_info(session, tg_id)
+        student, _, _, _ = await get_student_info(session, tg_id)
 
         if student:
             student_last_name = student.last_name
@@ -241,7 +241,7 @@ async def process_choose_month(callback: CallbackQuery, state: FSMContext):
 
     tg_id = callback.from_user.id
     async with async_session() as session:
-        student, _, _ = await get_student_info(session, tg_id)
+        student, _, _, _ = await get_student_info(session, tg_id)
 
         if student:
             student_last_name = student.last_name
@@ -275,7 +275,7 @@ async def process_choose_month(callback: CallbackQuery, state: FSMContext):
 
     tg_id = callback.from_user.id
     async with async_session() as session:
-        student, _, _ = await get_student_info(session, tg_id)
+        student, _, _, _ = await get_student_info(session, tg_id)
 
         if student:
             student_last_name = student.last_name
@@ -401,7 +401,7 @@ async def receive_phone(message: Message, state: FSMContext):
         return
 
     async with async_session() as session:
-        student, _, _ = await get_student_info(session, tg_id)
+        student, _, _, _ = await get_student_info(session, tg_id)
         if student:
             formatted_phone = f"+7 ({raw_phone[:3]}) {raw_phone[3:6]}-{raw_phone[6:8]}-{raw_phone[8:]}"
             student_last_name = student.last_name
