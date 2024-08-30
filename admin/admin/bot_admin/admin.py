@@ -8,7 +8,8 @@ from django.conf import settings
 
 from .models import Teacher, Student, StudentTeacher, Homework, PointsHistory, Administrator, Password, \
     MonetizationSystem, MonetizationSystemPoints, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, \
-    TasksForTheWeekVocal, DailyCheckIn, Task1, Task2, Task3, Task4, Task5, Task6, Task7, TgIdPhone, StudentGift
+    TasksForTheWeekVocal, DailyCheckIn, Task1, Task2, Task3, Task4, Task5, Task6, Task7, TgIdPhone, StudentGift, \
+    DailyCheckInVocal
 
 
 class TeacherAdmin(admin.ModelAdmin):
@@ -68,7 +69,7 @@ admin.site.register(TgIdPhone, TgIdPhoneAdmin)
 
 
 class HomeworkAdmin(admin.ModelAdmin):
-    list_display = ('id', 'student_id', 'teacher_id', 'file_hash', 'file_type', 'submission_time', 'feedback_sent')
+    list_display = ('id', 'student', 'teacher', 'file_type', 'submission_time', 'feedback_sent')
 
     def has_add_permission(self, request):
         return False
@@ -78,7 +79,7 @@ admin.site.register(Homework, HomeworkAdmin)
 
 
 class PointsHistoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'student_id', 'points_added', 'date_added')
+    list_display = ('id', 'student', 'points_added', 'date_added')
 
     def has_add_permission(self, request):
         return False
@@ -157,13 +158,23 @@ admin.site.register(TasksForTheWeekVocal, TasksForTheWeekVocalAdmin)
 
 
 class DailyCheckInAdmin(admin.ModelAdmin):
-    list_display = ('id', 'student_id', 'check_in_count', 'date')
+    list_display = ('id', 'student', 'check_in_count', 'date')
 
     def has_add_permission(self, request):
         return False
 
 
 admin.site.register(DailyCheckIn, DailyCheckInAdmin)
+
+
+class DailyCheckInVocalAdmin(admin.ModelAdmin):
+    list_display = ('id', 'student', 'check_in_count', 'date')
+
+    def has_add_permission(self, request):
+        return False
+
+
+admin.site.register(DailyCheckInVocal, DailyCheckInVocalAdmin)
 
 
 def send_telegram_message(chat_id, text):
@@ -175,6 +186,15 @@ def send_telegram_message(chat_id, text):
     }
     response = requests.post(url, data=payload)
     return response.json()
+
+
+def get_points_word(points):
+    if points % 10 == 1 and points % 100 != 11:
+        return "балл"
+    elif 2 <= points % 10 <= 4 and (points % 100 < 10 or points % 100 >= 20):
+        return "балла"
+    else:
+        return "баллов"
 
 
 def make_approve_task(points):
@@ -191,10 +211,13 @@ def make_approve_task(points):
                 student.point += points
                 student.save()
 
+                points_word = get_points_word(points)
+
                 PointsHistory.objects.create_points_history(student=student, points_added=points,
                                                             date_added=datetime.now())
 
-                send_telegram_message(student.tg_id, text=f"✅Вам добавлено +{points} баллов за выполнение задания.")
+                send_telegram_message(student.tg_id,
+                                      text=f"✅Вам добавлено +{points} {points_word} за выполнение задания.")
 
     return approve_task
 

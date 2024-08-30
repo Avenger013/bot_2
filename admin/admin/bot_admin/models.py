@@ -4,6 +4,10 @@ from django.db import models
 from datetime import datetime
 
 
+def generate_random_password():
+    return str(random.randint(10000000, 99999999))
+
+
 class Teacher(models.Model):
     VOCAL = 'Вокал'
     GUITAR = 'Гитара'
@@ -21,7 +25,7 @@ class Teacher(models.Model):
         default=VOCAL,
         verbose_name='Специализация'
     )
-    password_teacher = models.CharField(max_length=5, default=lambda: str(random.randint(10000, 99999)),
+    password_teacher = models.CharField(max_length=5, default=generate_random_password,
                                         verbose_name='Пароль')
 
     class Meta:
@@ -36,7 +40,7 @@ class Teacher(models.Model):
 
 class Student(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    tg_id = models.BigIntegerField(verbose_name='Телеграмм ID')
+    tg_id = models.BigIntegerField(verbose_name='Телеграм ID')
     date_of_registration = models.DateTimeField(default=datetime.now, verbose_name='Дата регистрации')
     name = models.CharField(max_length=255, null=True, blank=True, verbose_name='Имя')
     last_name = models.CharField(max_length=255, null=True, blank=True, verbose_name='Фамилия')
@@ -68,7 +72,7 @@ class StudentTeacher(models.Model):
 
 class TgIdPhone(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    tg_id = models.BigIntegerField(verbose_name='Телеграмм ID')
+    tg_id = models.BigIntegerField(verbose_name='Телеграм ID')
     phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
 
     class Meta:
@@ -96,12 +100,13 @@ class StudentGift(models.Model):
 
 class Homework(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, db_column='student_id')
-    teacher = models.ForeignKey('Teacher', on_delete=models.CASCADE, db_column='teacher_id')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, db_column='student_id', verbose_name='Ученик')
+    teacher = models.ForeignKey('Teacher', on_delete=models.CASCADE, db_column='teacher_id',
+                                verbose_name='Преподаватель')
     file_hash = models.CharField(max_length=255, null=True, blank=True)
-    file_type = models.CharField(max_length=255, null=True, blank=True)
-    submission_time = models.DateTimeField()
-    feedback_sent = models.IntegerField(default=0)
+    file_type = models.CharField(max_length=255, null=True, blank=True, verbose_name='Тип присланного файла')
+    submission_time = models.DateTimeField(verbose_name='Дата отправки задания')
+    feedback_sent = models.IntegerField(default=0, verbose_name='Количество полученной обратной связи')
 
     class Meta:
         managed = False
@@ -121,9 +126,9 @@ class PointsHistoryManager(models.Manager):
 
 class PointsHistory(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, db_column='student_id')
-    points_added = models.IntegerField(null=True, blank=True)
-    date_added = models.DateTimeField(auto_now_add=True)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, db_column='student_id', verbose_name='Ученик')
+    points_added = models.IntegerField(null=True, blank=True, verbose_name='Количество полученных баллов')
+    date_added = models.DateTimeField(auto_now_add=True, verbose_name='Дата получения баллов')
 
     objects = PointsHistoryManager()
 
@@ -136,7 +141,7 @@ class PointsHistory(models.Model):
 
 class Administrator(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    administrator_tg_id = models.BigIntegerField()
+    administrator_tg_id = models.BigIntegerField(verbose_name='Телеграм ID SMM-специалиста')
 
     class Meta:
         managed = False
@@ -147,7 +152,8 @@ class Administrator(models.Model):
 
 class Password(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    password_newsletter = models.CharField(max_length=255, null=True, blank=True)
+    password_newsletter = models.CharField(max_length=255, null=True, blank=True,
+                                           verbose_name='Пароль для SMM-специалиста')
 
     class Meta:
         managed = False
@@ -158,8 +164,8 @@ class Password(models.Model):
 
 class MonetizationSystem(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    task = models.TextField(null=True, blank=True)
-    number_of_points = models.IntegerField(null=True, blank=True)
+    task = models.TextField(null=True, blank=True, verbose_name='Общие задания для получения баллов')
+    number_of_points = models.IntegerField(null=True, blank=True, verbose_name='Количество баллов')
 
     class Meta:
         managed = False
@@ -170,8 +176,8 @@ class MonetizationSystem(models.Model):
 
 class MonetizationSystemPoints(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    task = models.TextField(null=True, blank=True)
-    number_of_points = models.IntegerField(null=True, blank=True)
+    task = models.TextField(null=True, blank=True, verbose_name='Задания от школы для получения баллов')
+    number_of_points = models.IntegerField(null=True, blank=True, verbose_name='Количество баллов')
 
     class Meta:
         managed = False
@@ -182,8 +188,8 @@ class MonetizationSystemPoints(models.Model):
 
 class PointsExchange(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    present = models.TextField(null=True, blank=True)
-    number_of_points = models.IntegerField(null=True, blank=True)
+    present = models.TextField(null=True, blank=True, verbose_name='Список подарков для обмена за баллы')
+    number_of_points = models.IntegerField(null=True, blank=True, verbose_name='Количество баллов')
 
     class Meta:
         managed = False
@@ -194,7 +200,7 @@ class PointsExchange(models.Model):
 
 class SupportInfo(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    instruction_support = models.TextField(null=True, blank=True)
+    instruction_support = models.TextField(null=True, blank=True, verbose_name='Текст про техническую поддержку')
 
     class Meta:
         managed = False
@@ -205,7 +211,7 @@ class SupportInfo(models.Model):
 
 class InfoBot(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    instruction = models.TextField(null=True, blank=True)
+    instruction = models.TextField(null=True, blank=True, verbose_name='Текст про информацию о боте')
 
     class Meta:
         managed = False
@@ -216,8 +222,8 @@ class InfoBot(models.Model):
 
 class TasksForTheWeek(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    quest = models.TextField(null=True, blank=True)
-    attachment = models.CharField(max_length=255, null=True, blank=True)
+    quest = models.TextField(null=True, blank=True, verbose_name='Текст задания трекера гитары')
+    attachment = models.CharField(max_length=255, null=True, blank=True, verbose_name='Вложение (название файла)')
 
     class Meta:
         managed = False
@@ -228,8 +234,8 @@ class TasksForTheWeek(models.Model):
 
 class TasksForTheWeekVocal(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    quest_vocal = models.TextField(null=True, blank=True)
-    attachment_vocal = models.CharField(max_length=255, null=True, blank=True)
+    quest_vocal = models.TextField(null=True, blank=True, verbose_name='Текст задания трекера вокала')
+    attachment_vocal = models.CharField(max_length=255, null=True, blank=True, verbose_name='Вложение (название файла)')
 
     class Meta:
         managed = False
@@ -240,24 +246,37 @@ class TasksForTheWeekVocal(models.Model):
 
 class DailyCheckIn(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
-    student = models.OneToOneField('Student', on_delete=models.CASCADE, db_column='student_id')
-    check_in_count = models.IntegerField(default=1)
-    date = models.DateField()
+    student = models.OneToOneField('Student', on_delete=models.CASCADE, db_column='student_id', verbose_name='Ученик')
+    check_in_count = models.IntegerField(default=1, verbose_name='Количество отметок за неделю')
+    date = models.DateField(verbose_name='Дата последней отметки')
 
     class Meta:
         managed = False
         db_table = 'daily_check_ins'
         verbose_name = 'Информацию об отметках'
-        verbose_name_plural = 'Отметки о выполнении трекера'
+        verbose_name_plural = 'Отметки о выполнении трекера гитары'
+
+
+class DailyCheckInVocal(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.OneToOneField('Student', on_delete=models.CASCADE, db_column='student_id', verbose_name='Ученик')
+    check_in_count = models.IntegerField(default=1, verbose_name='Количество отметок за неделю')
+    date = models.DateField(verbose_name='Дата последней отметки')
+
+    class Meta:
+        managed = False
+        db_table = 'daily_check_ins_vocal'
+        verbose_name = 'Информацию об отметках'
+        verbose_name_plural = 'Отметки о выполнении трекера вокала'
 
 
 class Task1(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    date = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата посещения урока')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:
@@ -268,13 +287,13 @@ class Task1(models.Model):
 
 
 class Task2(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    month = models.CharField(max_length=255, null=True, blank=True)
-    year = models.IntegerField(null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    month = models.CharField(max_length=255, null=True, blank=True, verbose_name='Месяц')
+    year = models.IntegerField(null=True, blank=True, verbose_name='Год')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:
@@ -285,13 +304,13 @@ class Task2(models.Model):
 
 
 class Task3(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    month = models.CharField(max_length=255, null=True, blank=True)
-    year = models.IntegerField(null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    month = models.CharField(max_length=255, null=True, blank=True, verbose_name='Месяц')
+    year = models.IntegerField(null=True, blank=True, verbose_name='Год')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:
@@ -302,13 +321,13 @@ class Task3(models.Model):
 
 
 class Task4(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    date = models.CharField(max_length=255, null=True, blank=True)
-    link = models.TextField(null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата выполнения задания')
+    link = models.TextField(null=True, blank=True, verbose_name='Ссылка для проверки')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:
@@ -319,29 +338,29 @@ class Task4(models.Model):
 
 
 class Task5(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    date = models.CharField(max_length=255, null=True, blank=True)
-    link = models.TextField(null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата выполнения задания')
+    link = models.TextField(null=True, blank=True, verbose_name='Ссылка для проверки')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:
         managed = False
         db_table = 'tasks_5'
-        verbose_name = 'Отзыв на Яндекс и 2Гис'
-        verbose_name_plural = 'Отзывы на Яндекс и 2Гис'
+        verbose_name = 'Отзыв на Яндекс или 2Гис'
+        verbose_name_plural = 'Отзывы на Яндекс или 2Гис'
 
 
 class Task6(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    date = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата посещения мероприятия')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:
@@ -352,12 +371,13 @@ class Task6(models.Model):
 
 
 class Task7(models.Model):
-    id = models.AutoField(primary_key=True)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    id = models.AutoField(primary_key=True, verbose_name='ID')
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, verbose_name='Ученик')
     name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    phone = models.CharField(max_length=255, null=True, blank=True)
-    phone_friend = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон ученика')
+    phone_friend = models.CharField(max_length=255, null=True, blank=True,
+                                    verbose_name='Телефон того, кого пригласил ученик')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
     class Meta:

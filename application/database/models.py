@@ -45,6 +45,8 @@ class Student(Base):
     teachers = relationship(argument='Teacher', secondary='student_teacher', back_populates='students',
                             cascade="all, delete")
     daily_check_ins = relationship(argument='DailyCheckIn', back_populates='student', cascade="all, delete-orphan")
+    daily_check_ins_vocal = relationship(argument='DailyCheckInVocal', back_populates='student',
+                                         cascade="all, delete-orphan")
     tasks1 = relationship(argument='Task1', back_populates='student', cascade="all, delete-orphan")
     tasks2 = relationship(argument='Task2', back_populates='student', cascade="all, delete-orphan")
     tasks3 = relationship(argument='Task3', back_populates='student', cascade="all, delete-orphan")
@@ -184,6 +186,17 @@ class DailyCheckIn(Base):
     date = mapped_column(Date)
 
     student = relationship(argument='Student', back_populates='daily_check_ins')
+
+
+class DailyCheckInVocal(Base):
+    __tablename__ = 'daily_check_ins_vocal'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    student_id: Mapped[int] = mapped_column(ForeignKey('students.id'), unique=True)
+    check_in_count: Mapped[int] = mapped_column(default=1)
+    date = mapped_column(Date)
+
+    student = relationship(argument='Student', back_populates='daily_check_ins_vocal')
 
 
 class Task1(Base):

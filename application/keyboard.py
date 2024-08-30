@@ -504,8 +504,29 @@ back4 = InlineKeyboardMarkup(inline_keyboard=[
 back5 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='📍Отметиться!',
-            callback_data='check_in'
+            text='📍Отметиться!vocal',
+            callback_data='check_in_vocal'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='🔐Перейти в личный кабинет',
+            callback_data='back'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='◀️Назад',
+            callback_data='cancel'
+        )
+    ]
+])
+
+back51 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='📍Отметиться!guitar',
+            callback_data='check_in_guitar'
         )
     ],
     [
@@ -525,8 +546,23 @@ back5 = InlineKeyboardMarkup(inline_keyboard=[
 back6 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='📍Отметиться!',
-            callback_data='check_in'
+            text='📍Отметиться!vocal',
+            callback_data='check_in_vocal'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='🔐Перейти в личный кабинет',
+            callback_data='back'
+        )
+    ]
+])
+
+back61 = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='📍Отметиться!guitar',
+            callback_data='check_in_guitar'
         )
     ],
     [

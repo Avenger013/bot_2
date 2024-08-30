@@ -9,7 +9,7 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, FSInputFile, InputMediaPhoto, Message
 from sqlalchemy import select, and_
 
-from application.database.models import DailyCheckIn, PointsHistory, async_session
+from application.database.models import DailyCheckIn, DailyCheckInVocal, PointsHistory, async_session
 from application.database.requests import get_student, get_tasks_for_the_week
 
 import application.keyboard as kb
@@ -85,7 +85,13 @@ async def submit_homework_mark(message: Message, bot: Bot):
         else:
             response_text = await show_homework(bot, tg_id, student.date_of_registration,
                                                 student.specialisation_student)
-            await message.answer(text=response_text, reply_markup=kb.back6, parse_mode='HTML', protect_content=True)
+            if student.specialisation_student == 'Гитара':
+                keyboard = kb.back51
+            elif student.specialisation_student == 'Вокал':
+                keyboard = kb.back5
+            else:
+                keyboard = kb.back6
+            await message.answer(text=response_text, reply_markup=keyboard, parse_mode='HTML', protect_content=True)
 
 
 @router.callback_query(F.data.startswith('specialisation_'))
@@ -101,7 +107,13 @@ async def handle_specialisation_choice(callback: CallbackQuery, bot: Bot):
 
         specialisation_student = 'Гитара' if chosen_specialisation == 'guitar' else 'Вокал'
         response_text = await show_homework(bot, tg_id, student.date_of_registration, specialisation_student)
-        await callback.message.answer(text=response_text, reply_markup=kb.back6, parse_mode='HTML',
+        if specialisation_student == 'Гитара':
+            keyboard = kb.back61
+        elif specialisation_student == 'Вокал':
+            keyboard = kb.back6
+        else:
+            keyboard = kb.back5
+        await callback.message.answer(text=response_text, reply_markup=keyboard, parse_mode='HTML',
                                       protect_content=True)
 
 
@@ -122,12 +134,89 @@ async def submit_homework(callback: CallbackQuery, bot: Bot):
     else:
         response_text = await show_homework(bot, tg_id, student.date_of_registration,
                                             student.specialisation_student)
-        await callback.message.answer(text=response_text, reply_markup=kb.back5, parse_mode='HTML',
+        if student.specialisation_student == 'Гитара':
+            keyboard = kb.back61
+        elif student.specialisation_student == 'Вокал':
+            keyboard = kb.back6
+        else:
+            keyboard = kb.back5
+        await callback.message.answer(text=response_text, reply_markup=keyboard, parse_mode='HTML',
                                       protect_content=True)
 
 
-@router.callback_query(F.data.startswith('check_in'))
-async def check_in_homework(callback: CallbackQuery):
+@router.callback_query(F.data.startswith('check_in_vocal'))
+async def check_in_homework_vocal(callback: CallbackQuery):
+    tg_id = callback.from_user.id
+    today = datetime.now().date()
+
+    async with async_session() as session:
+        student = await get_student(session, tg_id)
+        if not student:
+            await callback.message.answer(text="Ваш аккаунт не найден в системе.", protect_content=True)
+            return
+
+        date_of_registration = student.date_of_registration.date()
+        current_week = (today - date_of_registration).days // 7
+
+        daily_check_in = await session.execute(
+            select(DailyCheckInVocal)
+            .where(and_(DailyCheckInVocal.student_id == student.id, DailyCheckInVocal.date == today))
+        )
+        daily_check_in = daily_check_in.scalars().first()
+
+        if daily_check_in:
+            daily_check_in_text = (
+                "Вы уже отметились сегодня, не забудьте отметиться завтра!"
+                f"Ваше текущее количество отметок: {daily_check_in.check_in_count}"
+            )
+            await callback.message.edit_text(text=daily_check_in_text, reply_markup=kb.back3, protect_content=True)
+            return
+
+        last_check_in = await session.execute(
+            select(DailyCheckInVocal)
+            .where(DailyCheckInVocal.student_id == student.id)
+            .order_by(DailyCheckInVocal.date.desc())
+        )
+        last_check_in = last_check_in.scalars().first()
+
+        last_week = (last_check_in.date - date_of_registration).days // 7 if last_check_in else None
+        if last_week is not None and last_week != current_week:
+            last_check_in.check_in_count = 0
+
+        if last_check_in and last_check_in.date < today:
+            last_check_in.check_in_count += 1
+            last_check_in.date = today
+
+            if last_check_in.check_in_count >= 7:
+                points_to_add = 1
+                student.point = (student.point or 0) + points_to_add
+                last_check_in.check_in_count = 0
+
+                new_points_history = PointsHistory(student_id=student.id, points_added=points_to_add,
+                                                   date_added=datetime.now())
+                session.add(new_points_history)
+
+                last_check_in_text = (
+                    "Поздравляем! Вы набрали 7 отметок и получили <b>+1 балл</b>.\n"
+                    "Количество баллов можно посмотреть в <b>личном кабинете!</b>"
+                )
+                await callback.message.edit_text(text=last_check_in_text, parse_mode='HTML', reply_markup=kb.back3,
+                                                 protect_content=True)
+            else:
+                await callback.message.edit_text(
+                    text="Отметка успешно учтена!", reply_markup=kb.back3, protect_content=True)
+
+            await session.commit()
+        else:
+            new_check_in = DailyCheckInVocal(student_id=student.id, date=today, check_in_count=1)
+            session.add(new_check_in)
+            await session.commit()
+            await callback.message.edit_text(text="Отметка успешно учтена! Это ваша первая отметка.",
+                                             reply_markup=kb.back3, protect_content=True)
+
+
+@router.callback_query(F.data.startswith('check_in_guitar'))
+async def check_in_homework_vocal(callback: CallbackQuery):
     tg_id = callback.from_user.id
     today = datetime.now().date()
 
@@ -195,3 +284,4 @@ async def check_in_homework(callback: CallbackQuery):
             await session.commit()
             await callback.message.edit_text(text="Отметка успешно учтена! Это ваша первая отметка.",
                                              reply_markup=kb.back3, protect_content=True)
+
