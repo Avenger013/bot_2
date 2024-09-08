@@ -25,7 +25,7 @@ class Teacher(models.Model):
         default=VOCAL,
         verbose_name='Специализация'
     )
-    password_teacher = models.CharField(max_length=5, default=generate_random_password,
+    password_teacher = models.CharField(max_length=8, default=generate_random_password,
                                         verbose_name='Пароль')
 
     class Meta:

@@ -222,6 +222,7 @@ async def teacher_selected_students(callback: CallbackQuery, state: FSMContext):
         else:
             tg_phone_record = TgIdPhone(tg_id=tg_id, phone=phone)
             session.add(tg_phone_record)
+            await session.commit()
 
         student = await session.scalar(select(Student).filter_by(tg_id=tg_id))
 

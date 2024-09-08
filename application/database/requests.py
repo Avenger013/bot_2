@@ -131,7 +131,7 @@ async def get_student_info(session, tg_id):
 
             return student, teachers, check_in_count, check_in_count_vocal
         else:
-            return None, [], 0
+            return None, [], 0, 0
     except Exception as e:
         print(f"Error in get_student_info: {e}")
         return None, [], 0
