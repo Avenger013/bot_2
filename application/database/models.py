@@ -93,6 +93,7 @@ class Homework(Base):
     file_type: Mapped[str | None] = mapped_column()
     submission_time = mapped_column(DateTime)
     feedback_sent: Mapped[int] = mapped_column(default=0)
+    is_checked = mapped_column(Boolean, default=False)
 
     student = relationship(argument='Student', back_populates='homeworks')
     teacher = relationship(argument='Teacher', back_populates='homeworks')

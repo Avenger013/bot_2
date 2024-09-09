@@ -107,6 +107,7 @@ class Homework(models.Model):
     file_type = models.CharField(max_length=255, null=True, blank=True, verbose_name='Тип присланного файла')
     submission_time = models.DateTimeField(verbose_name='Дата отправки задания')
     feedback_sent = models.IntegerField(default=0, verbose_name='Количество полученной обратной связи')
+    is_checked = models.BooleanField(default=False, verbose_name='Отметка о проверке задания')
 
     class Meta:
         managed = False

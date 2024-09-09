@@ -69,7 +69,7 @@ admin.site.register(TgIdPhone, TgIdPhoneAdmin)
 
 
 class HomeworkAdmin(admin.ModelAdmin):
-    list_display = ('id', 'student', 'teacher', 'file_type', 'submission_time', 'feedback_sent')
+    list_display = ('id', 'student', 'teacher', 'file_type', 'submission_time', 'feedback_sent', 'is_checked')
 
     def has_add_permission(self, request):
         return False

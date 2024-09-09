@@ -114,11 +114,19 @@ async def student_files(callback: CallbackQuery, bot: Bot):
             files_found = True
             file_hash = await generate_hash(filename)
 
+            async with async_session() as session:
+                homework, _ = await get_homework_with_details(session, file_hash)
+
             buttons = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="Принять", callback_data=f'accepted_{file_hash}'),
                  InlineKeyboardButton(text="Отклонить", callback_data=f'decline_{file_hash}')],
                 [InlineKeyboardButton(text="Обратная связь", callback_data=f'feedback_{file_hash}')]
             ])
+
+            if homework and homework.is_checked:
+                buttons = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="Проверено", callback_data=f'checked_{file_hash}')]
+                ])
 
             if filename.endswith('_video_2.mp4'):
                 keyboard = buttons
@@ -160,11 +168,18 @@ async def accept_homework(callback: CallbackQuery):
                                   show_alert=True)
             return
 
+        if homework.is_checked:
+            await callback.answer(text="Задание уже было проверено.", show_alert=True)
+            return
+
         points_to_add = 3
         student.point = (student.point or 0) + points_to_add
 
         new_points_history = PointsHistory(student_id=student.id, points_added=points_to_add, date_added=datetime.now())
         session.add(new_points_history)
+
+        homework.is_checked = True
+        session.add(homework)
 
         await session.commit()
 
@@ -199,11 +214,18 @@ async def accept_homework(callback: CallbackQuery):
                                   show_alert=True)
             return
 
+        if homework.is_checked:
+            await callback.answer(text="Задание уже было проверено.", show_alert=True)
+            return
+
         points_to_add = 2
         student.point = (student.point or 0) + points_to_add
 
         new_points_history = PointsHistory(student_id=student.id, points_added=points_to_add, date_added=datetime.now())
         session.add(new_points_history)
+
+        homework.is_checked = True
+        session.add(homework)
 
         await session.commit()
 
@@ -237,6 +259,13 @@ async def decline_homework(callback: CallbackQuery):
             await callback.answer(text="Необходимо отправить обратную связь перед отклонением домашнего задания.",
                                   show_alert=True)
             return
+
+        if homework.is_checked:
+            await callback.answer(text="Задание уже было проверено.", show_alert=True)
+            return
+
+        homework.is_checked = True
+        session.add(homework)
 
         await session.commit()
 
