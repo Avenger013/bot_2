@@ -291,6 +291,15 @@ async def process_choose_month(callback: CallbackQuery, state: FSMContext):
             student_first_name = student.name
             student_phone = student.phone
             student_id = student.id
+
+            query = select(Task3).filter_by(student_id=student_id, month=month_name_str, year=current_year)
+            result = await session.execute(query)
+            existing_task = result.scalars().first()
+
+            if existing_task:
+                await callback.answer(text="Вы уже выбрали этот месяц. Пожалуйста, выберите другой.", show_alert=True)
+                return
+
             new_task = Task3(
                 student_id=student_id,
                 name=student_first_name,
