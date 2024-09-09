@@ -36,7 +36,7 @@ class Student(Base):
     date_of_registration = mapped_column(DateTime)
     name: Mapped[str | None] = mapped_column()
     last_name: Mapped[str | None] = mapped_column()
-    phone: Mapped[str | None] = mapped_column()
+    phone: Mapped[str] = mapped_column()
     specialisation_student: Mapped[str | None] = mapped_column()
     point: Mapped[int | None] = mapped_column()
 
@@ -73,7 +73,7 @@ class TgIdPhone(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
-    phone: Mapped[str | None] = mapped_column()
+    phone: Mapped[str] = mapped_column()
 
 
 class StudentTeacher(Base):

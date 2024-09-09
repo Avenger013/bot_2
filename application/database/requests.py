@@ -159,11 +159,11 @@ async def get_homework_with_details(session, file_hash):
             student = homework.student
             return homework, student
         else:
-            return None, None, None
+            return None, None
 
     except Exception as e:
         print(f"Error in get_homework_with_details: {e}")
-        return None, None, None
+        return None, None
 
 
 async def get_student_by_id(session, student_id):

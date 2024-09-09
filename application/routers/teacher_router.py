@@ -60,6 +60,7 @@ async def students_choice(teacher_id: int) -> InlineKeyboardMarkup:
         "application/media/video": "*.mp4",
         "application/media/links": "*.html",
         "application/media/voice": "*.ogg",
+        "application/media/audio": "*.mp3",
     }
 
     student_ids = set()
@@ -103,6 +104,7 @@ async def student_files(callback: CallbackQuery, bot: Bot):
         "application/media/video": f"{teacher_id}_{student_id}_*.mp4",
         "application/media/links": f"{teacher_id}_{student_id}_*.html",
         "application/media/voice": f"{teacher_id}_{student_id}_*.ogg",
+        "application/media/audio": f"{teacher_id}_{student_id}_*.mp3",
     }
 
     files_found = False

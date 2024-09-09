@@ -44,7 +44,7 @@ class Student(models.Model):
     date_of_registration = models.DateTimeField(default=datetime.now, verbose_name='Дата регистрации')
     name = models.CharField(max_length=255, null=True, blank=True, verbose_name='Имя')
     last_name = models.CharField(max_length=255, null=True, blank=True, verbose_name='Фамилия')
-    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    phone = models.CharField(max_length=255, blank=True, verbose_name='Телефон')
     specialisation_student = models.CharField(max_length=255, null=True, blank=True, verbose_name='Специализация')
     point = models.IntegerField(null=True, blank=True, verbose_name='Количество баллов')
 
@@ -73,7 +73,7 @@ class StudentTeacher(models.Model):
 class TgIdPhone(models.Model):
     id = models.AutoField(primary_key=True, verbose_name='ID')
     tg_id = models.BigIntegerField(verbose_name='Телеграм ID')
-    phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
+    phone = models.CharField(max_length=255, blank=True, verbose_name='Телефон')
 
     class Meta:
         managed = False

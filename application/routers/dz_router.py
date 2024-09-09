@@ -145,6 +145,89 @@ async def dz_type_text_link(callback: CallbackQuery, state: FSMContext):
     await state.set_state(HomeworkState.WaitingForVoice)
 
 
+@router.callback_query(F.data.startswith('a_a'), HomeworkState.ChoosingDZType)
+async def dz_type_audio(callback: CallbackQuery, state: FSMContext):
+    await callback.message.edit_text(text='😁Отлично, теперь отправьте ваш аудиофайл (mp3)!',
+                                     reply_markup=kb.tree_can_send, protect_content=True)
+    await state.set_state(HomeworkState.WaitingForAudio)
+
+
+@router.message(F.audio, HomeworkState.WaitingForAudio)
+async def receive_homework_audio(message: Message, state: FSMContext):
+    tg_id = message.from_user.id
+
+    async with async_session() as session:
+        student = await session.scalar(select(Student).where(Student.tg_id == tg_id))
+        if not student:
+            await message.answer(text="🚫Студент не найден в базе данных.", protect_content=True)
+            return
+        student_id = student.id
+
+    data = await state.get_data()
+    teacher_id = data.get('teacher_id')
+
+    audio_id = message.audio.file_id
+
+    await state.update_data(audio_id=audio_id, student_id=student_id, teacher_id=teacher_id)
+    await message.answer(text="🧐Всё верно? Окончательно отправить?", reply_markup=kb.confirmation_audio,
+                         protect_content=True)
+
+
+@router.callback_query(F.data.in_(['au_confirm', 'au_change']), HomeworkState.WaitingForAudio)
+async def confirm_homework_audio(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    call_data = callback.data
+
+    await callback.message.edit_reply_markup(reply_markup=None)
+
+    if call_data == 'au_confirm':
+        data = await state.get_data()
+        audio_id = data['audio_id']
+        student_id = data['student_id']
+        teacher_id = data['teacher_id']
+
+        async with async_session() as session:
+            student = await session.scalar(select(Student).where(Student.id == student_id))
+            if not student:
+                await callback.message.answer(text="🚫Произошла ошибка при поиске данных студента.", protect_content=True)
+                return
+
+        full_name = f'{student.name} {student.last_name}'
+
+        file = await bot.get_file(audio_id)
+        file_path = file.file_path
+
+        directory = "application/media/audio"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        timestamp = datetime.now().strftime("%d_%m_%Y_%H-%M-%S")
+        filename = f"{directory}/{teacher_id}_{student_id}_{full_name}_{timestamp}_audio.mp3"
+
+        await bot.download_file(file_path, filename)
+
+        file_hash = await generate_hash_2(filename)
+
+        async with async_session() as session:
+            new_homework = Homework(
+                student_id=student_id,
+                teacher_id=teacher_id,
+                file_hash=file_hash,
+                file_type='audio',
+                submission_time=datetime.now()
+            )
+            session.add(new_homework)
+            await session.commit()
+
+        await callback.message.answer(text="✅Домашнее задание (аудиофайл) успешно отправлено!", reply_markup=kb.menu,
+                                      protect_content=True)
+        await state.clear()
+    elif call_data == 'au_change':
+        await callback.message.answer(text="😌Отлично, отправьте аудиофайл еще раз.",
+                                      reply_markup=kb.tree_can_send, protect_content=True)
+
+    await callback.answer()
+
+
 @router.message(F.photo, HomeworkState.WaitingForPhoto)
 async def receive_homework_photo(message: Message, state: FSMContext):
     tg_id = message.from_user.id
@@ -542,21 +625,21 @@ async def confirm_homework_voice(callback: CallbackQuery, state: FSMContext, bot
     await callback.answer()
 
 
-@router.message(F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
+@router.message(F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll | F.audio,
                 HomeworkState.WaitingForPhoto)
 async def wrong_homework_type(message: Message):
     await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось фото). Попробуйте еще раз.",
                          reply_markup=kb.tree_can_send, protect_content=True)
 
 
-@router.message(F.photo | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
+@router.message(F.photo | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll | F.audio,
                 HomeworkState.WaitingForVideo)
 async def wrong_type_for_video(message: Message):
     await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось видео). Попробуйте еще раз.",
                          reply_markup=kb.tree_can_send, protect_content=True)
 
 
-@router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
+@router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll | F.audio,
                 HomeworkState.WaitingForTextAndLinks)
 async def wrong_type_for_text_and_links(message: Message):
     await message.answer(
@@ -564,8 +647,16 @@ async def wrong_type_for_text_and_links(message: Message):
         reply_markup=kb.tree_can_send, protect_content=True)
 
 
-@router.message(F.photo | F.video | F.text | F.document | F.sticker | F.location | F.contact | F.poll,
+@router.message(F.photo | F.video | F.text | F.document | F.sticker | F.location | F.contact | F.poll | F.audio,
                 HomeworkState.WaitingForVoice)
 async def wrong_type_for_voice(message: Message):
     await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидалось голосовое). Попробуйте еще раз.",
                          reply_markup=kb.tree_can_send, protect_content=True)
+
+
+@router.message(F.photo | F.video | F.text | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
+                HomeworkState.WaitingForAudio)
+async def wrong_type_for_audio(message: Message):
+    await message.answer(text="🥺Вы выбрали не тот тип домашнего задания (ожидался аудиофайл). Попробуйте еще раз.",
+                         reply_markup=kb.tree_can_send, protect_content=True)
+

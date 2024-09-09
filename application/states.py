@@ -28,6 +28,7 @@ class HomeworkState(StatesGroup):
     WaitingForVideo = State()
     WaitingForTextAndLinks = State()
     WaitingForVoice = State()
+    WaitingForAudio = State()
 
 
 class HomeworkState2(StatesGroup):

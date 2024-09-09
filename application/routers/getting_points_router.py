@@ -248,6 +248,15 @@ async def process_choose_month(callback: CallbackQuery, state: FSMContext):
             student_first_name = student.name
             student_phone = student.phone
             student_id = student.id
+
+            query = select(Task2).filter_by(student_id=student_id, month=month_name_str, year=current_year)
+            result = await session.execute(query)
+            existing_task = result.scalars().first()
+
+            if existing_task:
+                await callback.answer(text="Вы уже выбрали этот месяц. Пожалуйста, выберите другой.", show_alert=True)
+                return
+
             new_task = Task2(
                 student_id=student_id,
                 name=student_first_name,
@@ -382,7 +391,7 @@ async def process_received_link_review(message: Message, state: FSMContext):
     await state.clear()
 
 
-@router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll,
+@router.message(F.photo | F.video | F.document | F.sticker | F.voice | F.location | F.contact | F.poll | F.audio,
                 CalendarState.Waiting_for_link)
 async def wrong_message_type(message: Message):
     await message.answer(text="❌ Ожидалась ссылка, а не другое сообщение. Попробуйте еще раз.")

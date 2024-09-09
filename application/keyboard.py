@@ -149,6 +149,12 @@ dz_type = InlineKeyboardMarkup(inline_keyboard=[
     ],
     [
         InlineKeyboardButton(
+            text='Аудиофайл',
+            callback_data='a_a'
+        )
+    ],
+    [
+        InlineKeyboardButton(
             text='Сообщение преподавателю или ссылка',
             callback_data='t_l'
         )
@@ -193,6 +199,21 @@ confirmation = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(
             text='Хочу изменить',
             callback_data='change'
+        )
+    ]
+])
+
+confirmation_audio = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(
+            text='Всё верно',
+            callback_data='au_confirm'
+        )
+    ],
+    [
+        InlineKeyboardButton(
+            text='Хочу изменить',
+            callback_data='au_change'
         )
     ]
 ])
@@ -504,7 +525,7 @@ back4 = InlineKeyboardMarkup(inline_keyboard=[
 back5 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='📍Отметиться!vocal',
+            text='📍Отметиться!',
             callback_data='check_in_vocal'
         )
     ],
@@ -525,7 +546,7 @@ back5 = InlineKeyboardMarkup(inline_keyboard=[
 back51 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='📍Отметиться!guitar',
+            text='📍Отметиться!',
             callback_data='check_in_guitar'
         )
     ],
@@ -546,7 +567,7 @@ back51 = InlineKeyboardMarkup(inline_keyboard=[
 back6 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='📍Отметиться!vocal',
+            text='📍Отметиться!',
             callback_data='check_in_vocal'
         )
     ],
@@ -561,7 +582,7 @@ back6 = InlineKeyboardMarkup(inline_keyboard=[
 back61 = InlineKeyboardMarkup(inline_keyboard=[
     [
         InlineKeyboardButton(
-            text='📍Отметиться!guitar',
+            text='📍Отметиться!',
             callback_data='check_in_guitar'
         )
     ],
