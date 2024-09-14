@@ -5,6 +5,7 @@ from datetime import datetime
 
 from django.contrib import admin
 from django.conf import settings
+from django.db.models import F
 
 from .models import Teacher, Student, StudentTeacher, Homework, PointsHistory, Administrator, Password, \
     MonetizationSystem, MonetizationSystemPoints, PointsExchange, SupportInfo, InfoBot, TasksForTheWeek, \
@@ -206,10 +207,7 @@ def make_approve_task(points):
                 task.save()
 
                 student = task.student
-                if student.point is None:
-                    student.point = 0
-                student.point += points
-                student.save()
+                Student.objects.filter(id=student.id).update(point=F('point') + points)
 
                 points_word = get_points_word(points)
 
@@ -217,7 +215,7 @@ def make_approve_task(points):
                                                             date_added=datetime.now())
 
                 send_telegram_message(student.tg_id,
-                                      text=f"✅Вам добавлено +{points} {points_word} за выполнение задания.")
+                                      text=f"✅Вам добавлено: +{points} {points_word} за выполнение задания от школы!")
 
     return approve_task
 
@@ -423,6 +421,7 @@ class Task7Admin(admin.ModelAdmin):
 
 
 admin.site.register(Task7, Task7Admin)
+
 
 # class MediaFileAdmin(admin.ModelAdmin):
 #     list_display = ('id', 'file')

@@ -48,6 +48,8 @@ class Student(models.Model):
     specialisation_student = models.CharField(max_length=255, null=True, blank=True, verbose_name='Специализация')
     point = models.IntegerField(null=True, blank=True, verbose_name='Количество баллов')
 
+    objects = models.Manager()
+
     class Meta:
         managed = False
         db_table = 'students'
@@ -280,6 +282,8 @@ class Task1(models.Model):
     date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата посещения урока')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
+    objects = models.Manager()
+
     class Meta:
         managed = False
         db_table = 'tasks_1'
@@ -296,6 +300,8 @@ class Task2(models.Model):
     month = models.CharField(max_length=255, null=True, blank=True, verbose_name='Месяц')
     year = models.IntegerField(null=True, blank=True, verbose_name='Год')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
+
+    objects = models.Manager()
 
     class Meta:
         managed = False
@@ -314,6 +320,8 @@ class Task3(models.Model):
     year = models.IntegerField(null=True, blank=True, verbose_name='Год')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
+    objects = models.Manager()
+
     class Meta:
         managed = False
         db_table = 'tasks_3'
@@ -330,6 +338,8 @@ class Task4(models.Model):
     date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата выполнения задания')
     link = models.TextField(null=True, blank=True, verbose_name='Ссылка для проверки')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
+
+    objects = models.Manager()
 
     class Meta:
         managed = False
@@ -348,6 +358,8 @@ class Task5(models.Model):
     link = models.TextField(null=True, blank=True, verbose_name='Ссылка для проверки')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
 
+    objects = models.Manager()
+
     class Meta:
         managed = False
         db_table = 'tasks_5'
@@ -363,6 +375,8 @@ class Task6(models.Model):
     phone = models.CharField(max_length=255, null=True, blank=True, verbose_name='Телефон')
     date = models.CharField(max_length=255, null=True, blank=True, verbose_name='Дата посещения мероприятия')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
+
+    objects = models.Manager()
 
     class Meta:
         managed = False
@@ -380,6 +394,8 @@ class Task7(models.Model):
     phone_friend = models.CharField(max_length=255, null=True, blank=True,
                                     verbose_name='Телефон того, кого пригласил ученик')
     is_approved = models.BooleanField(default=False, verbose_name='Отметка о выполнении задания')
+
+    objects = models.Manager()
 
     class Meta:
         managed = False
